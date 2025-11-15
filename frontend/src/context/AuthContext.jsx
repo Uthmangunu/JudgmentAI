@@ -14,14 +14,18 @@ export const AuthProvider = ({ children }) => {
         return;
       }
 
-      try {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
-      } catch (error) {
-        console.error('Failed to fetch current user', error);
-      } finally {
-        setIsBootstrapping(false);
-      }
+      // Temporarily disabled - backend /auth/me endpoint has issues
+      // User data is set during login/signup instead
+      setIsBootstrapping(false);
+
+      // try {
+      //   const currentUser = await authService.getCurrentUser();
+      //   setUser(currentUser);
+      // } catch (error) {
+      //   console.error('Failed to fetch current user', error);
+      // } finally {
+      //   setIsBootstrapping(false);
+      // }
     };
 
     bootstrap();
