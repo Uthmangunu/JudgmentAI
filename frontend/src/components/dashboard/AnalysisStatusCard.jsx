@@ -3,7 +3,7 @@ import LoadingSpinner from '../common/LoadingSpinner';
 export default function AnalysisStatusCard({ status }) {
   if (!status) return null;
   const { result = {}, status: taskStatus } = status;
-  const { total_comments = 0, processed_comments = 0 } = result;
+  const { total_comments = 0, processed_comments = 0 } = result || {};
   const percentage = total_comments ? Math.round((processed_comments / total_comments) * 100) : 0;
 
   return (
