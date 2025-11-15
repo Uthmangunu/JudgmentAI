@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      target: development
+    container_name: judgmentai-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./.env:/app/.env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      - redis
+    networks:
+      - judgmentai-network
+    restart: unless-stopped
+
+  # Celery Worker (for scraping & analysis)
+  celery-worker:
+    build:
+      context: .
+      target: development
+    container_name: judgmentai-celery
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=2
+    volumes:
+      - ./app:/app/app
+      - ./.env:/app/.env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      - redis
+    networks:
+      - judgmentai-network
+    restart: unless-stopped
+
+  # Celery Beat (for scheduled tasks - optional)
+  celery-beat:
+    build:
+      context: .
+      target: development
+    container_name: judgmentai-celery-beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    volumes:
+      - ./app:/app/app
+      - ./.env:/app/.env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      - redis
+    networks:
+      - judgmentai-network
+    restart: unless-stopped
+
+  # Redis (Celery broker)
+  redis:
+    image: redis:7-alpine
+    container_name: judgmentai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - judgmentai-network
+    restart: unless-stopped
+
+  # Flower (Celery monitoring - optional)
+  flower:
+    build:
+      context: .
+      target: development
+    container_name: judgmentai-flower
+    command: celery -A app.tasks.celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./.env:/app/.env
+    environment:
+      - APP_ENV=development
+    depends_on:
+      - redis
+      - celery-worker
+    networks:
+      - judgmentai-network
+    restart: unless-stopped
+
+networks:
+  judgmentai-network:
+    driver: bridge
+
+volumes:
+  redis-data:
