@@ -12,6 +12,7 @@ celery_app = Celery(
     backend=settings.CELERY_RESULT_BACKEND,
     include=[
         "app.tasks.reddit_scraper",
+        "app.tasks.reddit_scraper_public",
         "app.tasks.web_search"
     ]
 )

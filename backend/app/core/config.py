@@ -3,7 +3,7 @@ Core configuration settings using Pydantic Settings.
 Loads from environment variables with validation.
 """
 from typing import List
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,14 +23,13 @@ class Settings(BaseSettings):
     ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=30)
 
-    # CORS
-    ALLOWED_ORIGINS: str = Field(default="http://localhost:3000")
+    # CORS - must be stored as List[str] for FastAPI CORS middleware
+    ALLOWED_ORIGINS_STR: str = Field(default="http://localhost:3000", alias="ALLOWED_ORIGINS")
 
-    @field_validator("ALLOWED_ORIGINS")
-    @classmethod
-    def parse_origins(cls, v: str) -> List[str]:
-        """Convert comma-separated origins to list."""
-        return [origin.strip() for origin in v.split(",")]
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        """Parse comma-separated origins string into list."""
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS_STR.split(",")]
 
     # Supabase
     SUPABASE_URL: str = Field(...)

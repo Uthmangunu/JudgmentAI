@@ -1,10 +1,10 @@
 """
 NLP analysis service for Aspect-Based Sentiment Analysis (ABSA).
-Uses spaCy for aspect extraction and SetFit for sentiment classification.
+Uses spaCy for aspect extraction and OpenAI for sentiment classification.
 """
 from typing import List, Dict, Tuple
 import spacy
-from setfit import AbsaModel
+from openai import OpenAI
 
 from app.core.config import settings
 
@@ -22,10 +22,10 @@ class AnalysisService:
     def __init__(self):
         """Initialize NLP models."""
         self._nlp = None
-        self._absa_model = None
+        self._openai_client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
     def _load_models(self):
-        """Lazy-load NLP models (expensive operation)."""
+        """Lazy-load spaCy model (expensive operation)."""
         if self._nlp is None:
             # Load spaCy model for aspect extraction
             try:
@@ -34,14 +34,6 @@ class AnalysisService:
                 # Model not downloaded, use smaller model
                 print("Warning: en_core_web_lg not found, using en_core_web_sm")
                 self._nlp = spacy.load("en_core_web_sm")
-
-        if self._absa_model is None:
-            # Load pre-trained ABSA model
-            # Note: This is a placeholder - you may need to fine-tune for Reddit
-            self._absa_model = AbsaModel.from_pretrained(
-                "tomaarsen/setfit-absa-bge-small-en-v1.5-restaurants-aspect",
-                # You'll want to train your own model or find a general-domain one
-            )
 
     def extract_aspects(self, text: str) -> List[str]:
         """
@@ -87,7 +79,7 @@ class AnalysisService:
         aspect: str
     ) -> str:
         """
-        Classify sentiment for a specific aspect within text.
+        Classify sentiment for a specific aspect within text using OpenAI.
 
         Args:
             text: Full comment text
@@ -96,29 +88,34 @@ class AnalysisService:
         Returns:
             Sentiment label: "positive", "negative", or "neutral"
         """
-        self._load_models()
-
         try:
-            # Use ABSA model to predict sentiment for aspect
-            prediction = self._absa_model.predict([{
-                "text": text,
-                "aspect": aspect
-            }])[0]
+            # Use OpenAI to classify sentiment (lightweight, no model loading)
+            response = self._openai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a sentiment analysis assistant. Classify the sentiment about a specific aspect in the given text. Respond with only one word: positive, negative, or neutral."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Text: {text}\n\nAspect: {aspect}\n\nSentiment:"
+                    }
+                ],
+                temperature=0,
+                max_tokens=10
+            )
 
-            # Map model output to our schema
-            sentiment_map = {
-                "positive": "positive",
-                "negative": "negative",
-                "neutral": "neutral",
-                "POS": "positive",
-                "NEG": "negative",
-                "NEU": "neutral"
-            }
+            sentiment = response.choices[0].message.content.strip().lower()
 
-            return sentiment_map.get(prediction.lower(), "neutral")
+            # Validate response
+            if sentiment in ["positive", "negative", "neutral"]:
+                return sentiment
+            else:
+                return "neutral"
 
         except Exception as e:
-            print(f"Error classifying sentiment: {e}")
+            print(f"Error classifying sentiment with OpenAI: {e}")
             # Fallback to simple rule-based approach
             return self._fallback_sentiment(text, aspect)
 

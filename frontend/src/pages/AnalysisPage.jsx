@@ -9,6 +9,7 @@ import { ANALYSIS_MODES } from '../utils/constants';
 import { useMetaAnalysis } from '../hooks/useMetaAnalysis';
 import Button from '../components/common/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import AnimePanelGallery from '../components/layout/AnimePanelGallery';
 
 export default function AnalysisPage() {
   const { conversationId } = useParams();
@@ -59,6 +60,7 @@ export default function AnalysisPage() {
         <p className="text-text-secondary text-sm">{conversation?.reddit_url}</p>
         <p className="text-text-muted text-sm">{conversation?.total_comments} comments analyzed</p>
       </div>
+      <AnimePanelGallery variant="analysis" />
       <div className="flex flex-wrap gap-3 border border-border rounded-2xl p-2 bg-bg-secondary/70">
         {ANALYSIS_MODES.map((tab) => (
           <button

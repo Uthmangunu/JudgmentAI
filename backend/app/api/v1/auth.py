@@ -136,10 +136,11 @@ async def get_current_user_profile(
     Returns:
         UserResponse with user profile data
     """
+    # Use data from JWT token (Supabase manages auth.users separately)
     return UserResponse(
         id=current_user["user_id"],
-        email=current_user["email"],
-        created_at=current_user.get("created_at", "")
+        email=current_user.get("email", ""),
+        created_at=""  # JWT doesn't include created_at
     )
 
 

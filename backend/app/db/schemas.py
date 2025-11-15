@@ -119,6 +119,6 @@ class ScrapeTaskResponse(BaseModel):
 class TaskStatusResponse(BaseModel):
     """Response schema for task status check."""
     task_id: str
-    status: Literal["pending", "started", "success", "failure"]
+    status: Literal["pending", "started", "progress", "success", "failure"]
     result: dict | None = None
     error: str | None = None

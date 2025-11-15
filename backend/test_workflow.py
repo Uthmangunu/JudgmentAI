@@ -36,7 +36,7 @@ def test_workflow():
         f"{BASE_URL}/scrape",
         headers=headers,
         json={
-            "reddit_url": "https://www.reddit.com/r/AskReddit/comments/1gqvf5p/what_is_something_that_is_really_popular_now_but/",
+            "reddit_url": "https://www.reddit.com/r/AskReddit/comments/dxosj/what_word_or_phrase_did_you_totally_misunderstand/",
             "max_comments": 50
         }
     )
